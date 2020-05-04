@@ -6,7 +6,11 @@ const routes = require("./routes/routes");
 const morgan = require("morgan");
 const mongodb = require("./config/db");
 const colors = require("colors");
+const errorHandler = require("./middlewares/error");
 const app = express();
+// body-parsers
+
+app.use(express.json());
 
 
 // load the config file
@@ -15,6 +19,8 @@ env.config({path:"./config/config.env"});
 // connect db
 
 mongodb();
+
+
 
 // dev loggers
 
@@ -25,6 +31,10 @@ if (process.env.NODE_ENV === 'development') {
 // mount the routes.
 
 app.use("/api",routes);
+
+// error handler
+
+app.use(errorHandler);
 
 
 const PORT = process.env.PORT || 8000;
