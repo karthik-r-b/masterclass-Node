@@ -1,9 +1,7 @@
 const Bootcamp = require("../models/BootCamp");
 const ErrorResponse = require("../utils/errorResponse");
+const aysncHandler = require("../middlewares/async");
 
-// Array todos
-
-const todos = [{ id: 1, name: "workout" }, { id: 2, name: "coding" }]
 
 /*
 @desc    Get all the bootcamps
@@ -11,14 +9,11 @@ const todos = [{ id: 1, name: "workout" }, { id: 2, name: "coding" }]
 @access  Public
 */
 
-exports.getBootcamps= async(req,res,next)=>{
-    try {
+exports.getBootcamps= aysncHandler(async(req,res,next)=>{
+
         const bootcamp = await Bootcamp.find();
         res.status(200).json({success:true,count:bootcamp.length,data:bootcamp});
-    } catch (error) {
-        next(error);
-    }
-}
+});
 
 /*
 @desc     Get the specific bootcamp
@@ -26,17 +21,13 @@ exports.getBootcamps= async(req,res,next)=>{
 @access   public
 */
 
-exports.getBootcamp=async(req,res,next)=>{
-  try {
+exports.getBootcamp=aysncHandler(async(req,res,next)=>{
      const bootcamp = await Bootcamp.findById(req.params.id);
      if(!bootcamp){
-       return next(new ErrorResponse(`bootcamp is not found with id of ${req.params.id}`,400));
+       return next(new ErrorResponse(`bootcamp is not found with id of ${req.params.id}`,404));
      }
      res.status(200).json({success:true,data:bootcamp});
-  } catch (error) {
-      next(new ErrorResponse(`bootcamp is not found with id of ${req.params.id}`, 400));
-  }
-}
+})
 
 
 /*
@@ -44,15 +35,11 @@ exports.getBootcamp=async(req,res,next)=>{
 @route     POST /api/
 @access    Private
 */
-exports.createBootcamp=async(req,res,next)=>{
+exports.createBootcamp=aysncHandler(async(req,res,next)=>{
     let result = "";
-    try {
         result = await Bootcamp.create(req.body)
         result._id?res.status(201).json({success:true,message:'bootcamp got created'}) : res.status(500).json({success:true,message:'Unexpected failure'});
-    } catch (error) {
-        next(error);
-    }
-}
+})
 
 
 
@@ -62,20 +49,16 @@ exports.createBootcamp=async(req,res,next)=>{
 @access   Private
 */
 
-exports.updateBootcamp=async(req,res,next)=>{
-    try {
+exports.updateBootcamp=aysncHandler(async(req,res,next)=>{
         const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body,{
             new:true,
             runValidators:true
         });
         if (!bootcamp) {
-            return res.status(400).json({ success: false, message:'No data found' })
+            return res.status(404).json({ success: false, message:'No data found' })
         }
-        res.status(200).json({success:true,data:bootcamp});   
-    } catch (error) {
-        next(error);
-    }
-}
+        res.status(200).json({success:true,data:bootcamp});    
+})
 
 
 /*
@@ -84,15 +67,12 @@ exports.updateBootcamp=async(req,res,next)=>{
 @access private
 */
 
-exports.deleteBootcamp=async(req,res,next)=>{
-    try {
+exports.deleteBootcamp=aysncHandler(async(req,res,next)=>{
+
         const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
         if(!bootcamp){
-            return res.status(400).json({success:false,message:'No data found'});
+            return res.status(404).json({success:false,message:'No data found'});
         }
         res.status(200).json({success:true,data:bootcamp});
-    } catch (error) {
-       next(error);
-    }
 
-}
+})

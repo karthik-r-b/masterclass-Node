@@ -1,20 +1,19 @@
 const express = require('express');
 const env = require('dotenv');
-// routes files
-const routes = require("./routes/routes");
 // const logger = require("./middlewares/logger");
 const morgan = require("morgan");
 const mongodb = require("./config/db");
 const colors = require("colors");
 const errorHandler = require("./middlewares/error");
 const app = express();
-// body-parsers
+// load the config file
+env.config({ path: "./config/config.env" });
 
+// body-parsers
 app.use(express.json());
 
-
-// load the config file
-env.config({path:"./config/config.env"});
+// routes files
+const routes = require("./routes/routes");
 
 // connect db
 
