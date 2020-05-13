@@ -1,7 +1,7 @@
-const Bootcamp = require("../models/BootCamp");
-const ErrorResponse = require("../utils/errorResponse");
-const aysncHandler = require("../middlewares/async");
-
+const Bootcamp = require('../models/BootCamp');
+const ErrorResponse = require('../utils/errorResponse');
+const aysncHandler = require('../middlewares/async');
+const geocoder = require('../utils/geocoder');
 
 /*
 @desc    Get all the bootcamps
@@ -9,10 +9,48 @@ const aysncHandler = require("../middlewares/async");
 @access  Public
 */
 
-exports.getBootcamps= aysncHandler(async(req,res,next)=>{
+exports.getBootcamps = aysncHandler(async (req, res, next) => {
+  let query;
+  // copy the query
+  const reqQuery = { ...req.query };
 
-        const bootcamp = await Bootcamp.find();
-        res.status(200).json({success:true,count:bootcamp.length,data:bootcamp});
+  // fields to execute
+  const removeFields = ['select', 'sort'];
+
+  // loop over the removefields and exclude the properties from reqQuery
+  removeFields.forEach((param) => delete reqQuery[param]);
+
+  // create a query string
+  let queryString = JSON.stringify(reqQuery);
+
+  // creating the operators{gt,lt,gte,lte}
+  queryString = queryString.replace(
+    /\b(gt|gte|lt|lte|in)\b/g,
+    (match) => `$${match}`
+  );
+
+  queryString = JSON.parse(queryString);
+  // finding the resource
+  query = Bootcamp.find(queryString);
+  console.log(await query);
+  // select the fields
+  if (req.query.select) {
+    const fields = req.query.select.split(',').join(' ');
+    query = query.select(fields);
+  }
+
+  // sort the fields
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(',').join(' ');
+    query = query.sort(sortBy);
+  } else {
+    query = query.sort('-createdAt');
+  }
+  //  executing the query
+  const bootcamps = await query;
+  res
+    .status(200)
+    .json({ success: true, count: bootcamps.length, data: bootcamps });
 });
 
 /*
@@ -21,27 +59,31 @@ exports.getBootcamps= aysncHandler(async(req,res,next)=>{
 @access   public
 */
 
-exports.getBootcamp=aysncHandler(async(req,res,next)=>{
-     const bootcamp = await Bootcamp.findById(req.params.id);
-     if(!bootcamp){
-       return next(new ErrorResponse(`bootcamp is not found with id of ${req.params.id}`,404));
-     }
-     res.status(200).json({success:true,data:bootcamp});
-})
-
+exports.getBootcamp = aysncHandler(async (req, res, next) => {
+  const bootcamp = await Bootcamp.findById(req.params.id);
+  if (!bootcamp) {
+    return next(
+      new ErrorResponse(
+        `bootcamp is not found with id of ${req.params.id}`,
+        404
+      )
+    );
+  }
+  res.status(200).json({ success: true, data: bootcamp });
+});
 
 /*
 @desc     create the bootcamp
 @route     POST /api/
 @access    Private
 */
-exports.createBootcamp=aysncHandler(async(req,res,next)=>{
-    let result = "";
-        result = await Bootcamp.create(req.body)
-        result._id?res.status(201).json({success:true,message:'bootcamp got created'}) : res.status(500).json({success:true,message:'Unexpected failure'});
-})
-
-
+exports.createBootcamp = aysncHandler(async (req, res, next) => {
+  let result = '';
+  result = await Bootcamp.create(req.body);
+  result._id
+    ? res.status(201).json({ success: true, message: 'bootcamp got created' })
+    : res.status(500).json({ success: true, message: 'Unexpected failure' });
+});
 
 /*
 @desc     edit the bootcamp
@@ -49,17 +91,16 @@ exports.createBootcamp=aysncHandler(async(req,res,next)=>{
 @access   Private
 */
 
-exports.updateBootcamp=aysncHandler(async(req,res,next)=>{
-        const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body,{
-            new:true,
-            runValidators:true
-        });
-        if (!bootcamp) {
-            return res.status(404).json({ success: false, message:'No data found' })
-        }
-        res.status(200).json({success:true,data:bootcamp});    
-})
-
+exports.updateBootcamp = aysncHandler(async (req, res, next) => {
+  const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  if (!bootcamp) {
+    return res.status(404).json({ success: false, message: 'No data found' });
+  }
+  res.status(200).json({ success: true, data: bootcamp });
+});
 
 /*
 @desc   delete the bootcamp
@@ -67,12 +108,38 @@ exports.updateBootcamp=aysncHandler(async(req,res,next)=>{
 @access private
 */
 
-exports.deleteBootcamp=aysncHandler(async(req,res,next)=>{
+exports.deleteBootcamp = aysncHandler(async (req, res, next) => {
+  const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
+  if (!bootcamp) {
+    return res.status(404).json({ success: false, message: 'No data found' });
+  }
+  res.status(200).json({ success: true, data: bootcamp });
+});
 
-        const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
-        if(!bootcamp){
-            return res.status(404).json({success:false,message:'No data found'});
-        }
-        res.status(200).json({success:true,data:bootcamp});
+/*
+@desc    Get all the bootcamps with specific distance
+@route   GET /api/radius/:zipcode/:distance
+@access  Public
+*/
 
-})
+exports.getBootcampByDistance = aysncHandler(async (req, res, next) => {
+  const { zipcode, distance } = req.params;
+
+  //   Get lat,lang from geocoder
+  const loc = await geocoder.geocode(zipcode);
+  const lat = loc[0].latitude;
+  const long = loc[0].longitude;
+
+  //   calculate the radius using radians
+  // Total radius of sphere is 3,958 Miles
+
+  const radius = distance / 3963;
+
+  const bootcamps = await Bootcamp.find({
+    location: { $geoWithin: { $centerSphere: [[long, lat], radius] } },
+  });
+
+  res
+    .status(200)
+    .json({ success: true, count: bootcamps.length, data: bootcamps });
+});
