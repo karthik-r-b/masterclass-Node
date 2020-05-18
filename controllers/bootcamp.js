@@ -31,7 +31,7 @@ exports.getBootcamps = aysncHandler(async (req, res, next) => {
 
   queryString = JSON.parse(queryString);
   // finding the resource
-  query = Bootcamp.find(queryString);
+  query = Bootcamp.find(queryString).populate('courses');
 
   // select the fields
   if (req.query.select) {
@@ -142,10 +142,11 @@ exports.updateBootcamp = aysncHandler(async (req, res, next) => {
 */
 
 exports.deleteBootcamp = aysncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
+  const bootcamp = await Bootcamp.findById(req.params.id);
   if (!bootcamp) {
     return res.status(404).json({ success: false, message: 'No data found' });
   }
+  bootcamp.remove();
   res.status(200).json({ success: true, data: bootcamp });
 });
 

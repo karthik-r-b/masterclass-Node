@@ -1,5 +1,4 @@
 const fs = require('fs');
-const mongoose = require('mongoose');
 const colors = require('colors');
 const env = require('dotenv');
 const mongodb = require('./config/db');
@@ -10,6 +9,7 @@ env.config({ path: './config/config.env' });
 
 //models
 const Bootcamp = require('./models/BootCamp');
+const Courses = require('./models/Courses');
 
 // connect to db
 mongodb();
@@ -20,9 +20,12 @@ const bootcamps = JSON.parse(
   fs.readFileSync(`${__dirname}/_data/bootcamps.json`)
 );
 
+const courses = JSON.parse(fs.readFileSync(`${__dirname}/_data/courses.json`));
+
 const importData = async () => {
   try {
     await Bootcamp.create(bootcamps);
+    await Courses.create(courses);
     console.log(`Data is imported`.green.inverse);
     process.exit();
   } catch (error) {
@@ -33,6 +36,7 @@ const importData = async () => {
 const deleteData = async () => {
   try {
     await Bootcamp.deleteMany();
+    await Courses.deleteMany();
     console.log(`Data is destroyed`.red.inverse);
     process.exit();
   } catch (error) {
