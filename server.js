@@ -1,9 +1,11 @@
+const path = require('path');
 const express = require('express');
 const env = require('dotenv');
 // const logger = require("./middlewares/logger");
 const morgan = require('morgan');
 const mongodb = require('./config/db');
 const colors = require('colors');
+const fileupload = require('express-fileupload');
 const errorHandler = require('./middlewares/error');
 const app = express();
 // load the config file
@@ -24,6 +26,13 @@ mongodb();
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+// file uploading
+app.use(fileupload());
+
+// set static folders
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // mount the routes.
 
