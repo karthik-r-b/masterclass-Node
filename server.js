@@ -17,6 +17,7 @@ app.use(express.json());
 // routes files
 const bootcampRoutes = require('./routes/bootcamp.routes');
 const courseRoutes = require('./routes/courses.routes');
+const authRoutes = require('./routes/auth.route');
 // connect db
 
 mongodb();
@@ -38,6 +39,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/bootcamp', bootcampRoutes);
 app.use('/api/course', courseRoutes);
+app.use('/api/auth', authRoutes);
 
 // error handler
 

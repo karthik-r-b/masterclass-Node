@@ -11,21 +11,22 @@ const asyncHandler = require('../middlewares/async');
 */
 
 exports.getCourses = asyncHandler(async (req, res, next) => {
-  let query;
-  if (req.params.bootcampId) {
-    query = Courses.find({ bootcamp: req.params.bootcampId });
-  } else {
-    query = Courses.find().populate({
-      path: 'bootcamp',
-      select: 'name description',
-    });
-  }
-  const course = await query;
-  res.status(200).json({
-    success: true,
-    count: course.length,
-    data: course,
-  });
+  res.status(200).json(res.advancedResults);
+  // let query;
+  // if (req.params.bootcampId) {
+  //   query = Courses.find({ bootcamp: req.params.bootcampId });
+  // } else {
+  //   query = Courses.find().populate({
+  //     path: 'bootcamp',
+  //     select: 'name description',
+  //   });
+  // }
+  // const course = await query;
+  // res.status(200).json({
+  //   success: true,
+  //   count: course.length,
+  //   data: course,
+  // });
 });
 
 /*
