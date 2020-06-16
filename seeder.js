@@ -10,6 +10,7 @@ env.config({ path: './config/config.env' });
 //models
 const Bootcamp = require('./models/BootCamp');
 const Courses = require('./models/Courses');
+const User = require('./models/User');
 
 // connect to db
 mongodb();
@@ -22,10 +23,13 @@ const bootcamps = JSON.parse(
 
 const courses = JSON.parse(fs.readFileSync(`${__dirname}/_data/courses.json`));
 
+const users = JSON.parse(fs.readFileSync(`${__dirname}/_data/users.json`));
+
 const importData = async () => {
   try {
     await Bootcamp.create(bootcamps);
-    // await Courses.create(courses);
+    await Courses.create(courses);
+    await User.create(users);
     console.log(`Data is imported`.green.inverse);
     process.exit();
   } catch (error) {
@@ -37,6 +41,7 @@ const deleteData = async () => {
   try {
     await Bootcamp.deleteMany();
     await Courses.deleteMany();
+    await User.deleteMany();
     console.log(`Data is destroyed`.red.inverse);
     process.exit();
   } catch (error) {

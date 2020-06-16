@@ -1,6 +1,7 @@
 const express = require('express');
 const advancedResults = require('../middlewares/advancedResults');
 const Courses = require('../models/Courses');
+const { protect, authorize } = require('../middlewares/auth');
 const router = express.Router({ mergeParams: true });
 const {
   getCourses,
@@ -15,6 +16,11 @@ router.route('/').get(
   }),
   getCourses
 );
-router.route('/create').post(createCourse);
-router.route('/:courseId').put(updateCourse).delete(deleteCourse);
+router
+  .route('/create')
+  .post(protect, authorize('publisher', 'admin'), createCourse);
+router
+  .route('/:courseId')
+  .put(protect, authorize('publisher', 'admin'), updateCourse)
+  .delete(protect, deleteCourse);
 module.exports = router;

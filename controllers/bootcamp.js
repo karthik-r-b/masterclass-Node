@@ -40,6 +40,15 @@ exports.getBootcamp = aysncHandler(async (req, res, next) => {
 */
 exports.createBootcamp = aysncHandler(async (req, res, next) => {
   let result = '';
+  // Add user to request body
+  req.body.user = req.user.id;
+  // check for published bootcamp
+  const publishedBootcamp = await Bootcamp.find({ user: req.user.id });
+  if (publishedBootcamp.length > 0 && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`User with ${req.user.id} already published`)
+    );
+  }
   result = await Bootcamp.create(req.body);
   result._id
     ? res.status(201).json({ success: true, message: 'bootcamp got created' })
@@ -60,6 +69,12 @@ exports.updateBootcamp = aysncHandler(async (req, res, next) => {
   if (!bootcamp) {
     return res.status(404).json({ success: false, message: 'No data found' });
   }
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`${req.user.id} is not authorized for this route`)
+    );
+  }
   res.status(200).json({ success: true, data: bootcamp });
 });
 
@@ -73,6 +88,12 @@ exports.deleteBootcamp = aysncHandler(async (req, res, next) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
   if (!bootcamp) {
     return res.status(404).json({ success: false, message: 'No data found' });
+  }
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`${req.user.id} is not authorized for this route`)
+    );
   }
   bootcamp.remove();
   res.status(200).json({ success: true, data: bootcamp });
@@ -117,6 +138,12 @@ exports.bootcampPhotoUpload = aysncHandler(async (req, res, next) => {
   if (!bootcamp) {
     return next(
       new ErrorResponse(`No bootcamp is found with ${req.params.id}`, 404)
+    );
+  }
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`${req.user.id} is not authorized for this route`)
     );
   }
 

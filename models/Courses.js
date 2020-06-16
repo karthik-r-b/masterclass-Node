@@ -38,6 +38,11 @@ const CourseSchema = new mongoose.Schema({
     ref: 'Bootcamp',
     required: [true, 'Please add the bootcamp'],
   },
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: [true],
+  },
 });
 
 // static method to get average cost tuition fee

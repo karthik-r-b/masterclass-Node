@@ -7,7 +7,9 @@ const mongodb = require('./config/db');
 const colors = require('colors');
 const fileupload = require('express-fileupload');
 const errorHandler = require('./middlewares/error');
+const cors = require('cors');
 const app = express();
+app.use(cors());
 // load the config file
 env.config({ path: './config/config.env' });
 

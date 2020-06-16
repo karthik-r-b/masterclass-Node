@@ -37,13 +37,18 @@ exports.getCourses = asyncHandler(async (req, res, next) => {
 
 exports.createCourse = asyncHandler(async (req, res, next) => {
   const bootcamp = await BootCamp.findById(req.params.bootcampId);
-  console.log();
   if (!bootcamp) {
     return next(
       new ErrorResponse(
         `No bootcamp is found with ${req.params.bootcampId}`,
         404
       )
+    );
+  }
+  // Make sure the user is course owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`${req.user.id} is not authorized to access this route`)
     );
   }
 
@@ -69,6 +74,12 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
       )
     );
   }
+  // Make sure the use is course owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`${req.user.id} is not authorized to access this route`)
+    );
+  }
   const course = await Courses.findOneAndUpdate(req.params.courseId, req.body, {
     new: true,
     runValidators: true,
@@ -87,6 +98,12 @@ exports.deleteCourse = asyncHandler(async (req, res, next) => {
   if (!course) {
     return next(
       new ErrorResponse(`No course is found with ${req.params.courseId}`, 404)
+    );
+  }
+  // Make sure the use is course owner
+  if (course.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(`${req.user.id} is not authorized to access this route`)
     );
   }
   await course.remove();

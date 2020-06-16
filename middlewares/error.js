@@ -11,14 +11,17 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Mongoose for duplicate object
-  if (err.code === 11000 && err.keyValue.name) {
-    const message = `${err.keyValue.name} already exists`;
-    error = new ErrorResponse(message, 400);
-  } else if (err.code === 11000) {
-    console.log(JSON.stringify(error));
+  if (err.code === 11000) {
+    if (err.keyValue.name) {
+      const message = `${err.keyValue.name} already exists`;
+      error = new ErrorResponse(message, 400);
+    } else {
+      const message = `Email ID already exists`;
+      error = new ErrorResponse(message, 400);
+    }
   }
-  // mongoose validation error
   if (err.name === 'ValidationError') {
+    // mongoose validation error
     const message = Object.values(err.errors).map((value) => value.message);
     error = new ErrorResponse(message, 400);
   }
